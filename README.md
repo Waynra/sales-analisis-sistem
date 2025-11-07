@@ -1,133 +1,123 @@
 # Sales Analytics System
 
-A Laravel-based web application for managing and analyzing sales data across multiple e-commerce platforms (Shopee, Tokopedia, and TikTok Shop).
+Dokumentasi singkat proyek "Sales Analytics System" — aplikasi Laravel untuk mengimpor, mengelola, menganalisis, dan mengekspor data penjualan dari beberapa platform e‑commerce (Shopee, Tokopedia, TikTok Shop).
 
-## Features
+## Ringkasan fitur
 
--   📊 Sales Dashboard with visual analytics
--   📥 Import sales data from multiple sources:
-    -   Direct import from Shopee, Tokopedia, and TikTok Shop files
-    -   Custom template import support
--   📤 Export data in multiple formats:
-    -   Excel (.xlsx)
-    -   CSV
-    -   PDF
--   📱 Responsive interface with Bootstrap 5
--   📈 Monthly sales tracking
--   🔄 Automatic platform detection for imports
+-   📊 Dashboard analitik sederhana (chart & total bulanan)
+-   📥 Import data dari:
+    -   File resmi platform (Shopee / Tokopedia / TikTok Shop) — sistem mendeteksi header dan memetakan kolom secara otomatis
+    -   Template sistem (header standar: platform, date, product_name, quantity, price, ads_cost, affiliate_fee, total)
+-   📤 Export ke Excel (.xlsx), CSV, dan PDF
+-   🌓 Tema layout dasar tersedia (dark style pada `resources/views/layouts/app.blade.php`)
 
-## Requirements
+## Dependensi penting
 
 -   PHP >= 8.0
 -   Laravel 10.x
 -   Composer
--   MySQL/MariaDB
+-   Database: MySQL / MariaDB (atau database lain yang didukung Laravel)
+-   Paket composer yang digunakan di kode sumber ini:
+    -   rap2hpoutre/fast-excel (import/export Excel/CSV)
+    -   barryvdh/laravel-dompdf (generate PDF)
 
-## Installation
+## Instalasi (singkat, Windows / PowerShell)
 
-1. Clone the repository:
+1. Clone repo:
 
-```bash
-git clone [repository-url]
-cd sales-analytics-system
+```powershell
+git clone <repository-url>
+cd sales-analisis-sistem
 ```
 
 2. Install dependencies:
 
-```bash
+```powershell
 composer install
 ```
 
-3. Set up environment:
+3. Siapkan environment dan key:
 
-```bash
-cp .env.example .env
+```powershell
+copy .env.example .env
 php artisan key:generate
 ```
 
-4. Configure database in `.env`:
+4. Edit file `.env` untuk konfigurasi database dan APP_URL.
 
-```
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=sales_analytics
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
-```
+5. Jalankan migrasi:
 
-5. Run migrations:
-
-```bash
+```powershell
 php artisan migrate
 ```
 
-6. Start the development server:
+6. (Opsional) Jalankan server lokal:
 
-```bash
+```powershell
 php artisan serve
 ```
 
-## Usage
+## Route utama (yang tersedia saat ini)
 
-### Importing Sales Data
+Berikut route utama yang ada di `routes/web.php`:
 
-1. **Platform-Specific Import**
+-   GET / -> redirect ke route `sales.index`
+-   GET /sales -> `SalesController@index` (lihat: `resources/views/sales/index.blade.php`)
+-   POST /sales/import -> `SalesController@import` (import template sistem)
+-   POST /sales/import-platform -> `SalesImportController@import` (import file resmi platform)
+-   GET /sales/export/excel -> `SalesController@exportExcel`
+-   GET /sales/export/csv -> `SalesController@exportCSV`
+-   GET /sales/export/pdf -> `SalesController@exportPDF`
 
-    - Access the sales page
-    - Use the "Import File Resmi" section
-    - Upload files directly from Shopee, Tokopedia, or TikTok Shop
-    - System will automatically detect the platform and map the data
+Catatan: nama route dapat dilihat di file `routes/web.php` dan digunakan di Blade (navbar dan tombol export).
 
-2. **Template Import**
-    - Use the "Import File Template Sistem" section
-    - Required columns:
-        - platform
-        - date
-        - product_name
-        - quantity
-        - price
-        - ads_cost
-        - affiliate_fee
-        - total
+## Struktur tampilan penting
 
-### Exporting Data
+-   `resources/views/layouts/app.blade.php` — layout utama (navbar + dark theme). Contoh:
 
-The system supports three export formats:
+    -   Navbar memiliki link: Sales Data (`sales.index`), Analytics (`sales.analytics`), dan dropdown Export.
+    -   Bootstrap 5 + Chart.js digunakan untuk chart.
 
--   Excel: Click "Export Excel" button
--   CSV: Click "Export CSV" button
--   PDF: Click "Export PDF" button
+-   `resources/views/sales/index.blade.php` — halaman untuk mengimpor dan melihat tabel penjualan.
+-   `resources/views/sales/pdf.blade.php` — template untuk export PDF.
+-   `resources/views/dashboard.blade.php` — tampilan dashboard analitik.
 
-### Dashboard
+## Import & mapping
 
-Access the dashboard to view:
+-   `SalesController@import` mengimpor file dengan header template sistem.
+-   `SalesImportController@import` menerima file dari platform resmi dan mencoba mendeteksi platform berdasarkan header (mis. `Order ID`/`Order Date` untuk Shopee; `Created Time` untuk TikTok; `No Pesanan` untuk Tokopedia), lalu memetakan kolom ke model `Sale`.
 
--   Monthly total sales
--   Sales trend chart
--   Daily sales analytics
+    Contoh header template yang diharapkan (CSV / XLSX):
 
-## Data Structure
+    ```
+    platform,date,product_name,quantity,price,ads_cost,affiliate_fee,total
+    ```
 
-Sales data includes:
+    Jika nilai `total` tidak tersedia, sistem akan menghitungnya dari `quantity * price`.
 
--   Platform name
--   Sale date
--   Product name
--   Quantity
--   Price
--   Advertising costs
--   Affiliate fees
--   Total amount
+    ## Model & Database
 
-## Contributing
+    -   Model utama: `App\\Models\\Sale` (fillable: platform, date, product_name, quantity, price, ads_cost, affiliate_fee, total)
+    -   Migration: `database/migrations/2025_11_06_075522_create_sales_table.php` (kolom: platform, date, product_name, quantity, price, ads_cost, affiliate_fee, total)
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
+    ## Menjalankan export
 
-## License
+    -   Dari UI: gunakan tombol Export pada halaman Sales (atau dropdown Export di navbar pada layout).
+    -   Endpoint yang sama tersedia untuk pemanggilan langsung (lihat routes di atas).
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+    ## Tips dan catatan pengembangan
+
+    -   Pastikan timezone dan format tanggal pada `.env` sesuai data yang diimpor. Model mengasumsikan kolom `date` kompatibel dengan tipe `date` pada database.
+    -   Untuk file besar, perhatikan memory limit PHP saat impor; pertimbangkan queue / chunking jika dataset tumbuh.
+    -   Tema dark pada layout menggunakan inline CSS di `resources/views/layouts/app.blade.php` — ubah bila butuh skin terang.
+
+    ## Kontribusi
+
+    1. Fork repo
+    2. Buat branch fitur: `git checkout -b feature/your-feature`
+    3. Commit perubahan dan push
+    4. Buka Pull Request
+
+    ## Lisensi
+
+    Proyek ini mengikuti lisensi MIT (lihat file LICENSE jika ada). Laravel framework sendiri berlisensi MIT: https://opensource.org/licenses/MIT
